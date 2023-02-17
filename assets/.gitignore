@@ -1,0 +1,4 @@
+#ignore all files and directories here except gitignore
+*
+*/
+!.gitignore
