@@ -8,6 +8,7 @@ import torchvision.transforms as T
 from torchvision import models
 from config import AUTOROTO_PATH
 from pathlib import Path
+from src.constants.main_constants import SCREEN_RATIO
 
 import logging
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 class AutoRoto:
     '''Auto rotoscopy using ML image segmentation'''
 
-    scr_ratio = 3840/2160
+    scr_ratio = SCREEN_RATIO
     roto_vert_res = 1080
     roto_hor_res = int(roto_vert_res * scr_ratio)
     desired_vert_res = 2160
@@ -27,7 +28,7 @@ class AutoRoto:
     gpu_ind = torch.cuda.current_device()
     gpu_name = torch.cuda.get_device_name()
 
-    def __init__(self, video_path, save_path=None):
+    def __init__(self, video_path, save_path=None, display_img=False):
         self.cv2cap = cv2.VideoCapture(video_path)
         self.video_path_object = Path(video_path)
         self.video_filename = self.video_path_object.name
@@ -36,6 +37,7 @@ class AutoRoto:
             self.save_path = Path(self.video_path_object.parent, self.video_name, self.video_name  + '.png')
         else:
             self.save_path = save_path
+        self.display_img = display_img
 
     def rem_bg(self):
         while (1):
@@ -61,7 +63,8 @@ class AutoRoto:
                 dst = cv2.merge(rgba, 4)
                 cv2.imwrite(str(self.save_path.split('.')[0]) + '_' + str(int(num_frame)) + '.' + str(self.save_path.split('.')[1]), dst)
                 disp = cv2.resize(dst, (self.roto_hor_res, self.roto_vert_res))
-                cv2.imshow('frame',disp)
+                if self.display_img:
+                    cv2.imshow('frame',disp)
 
             if cv2.waitKey(1) == ord('q'): # press "q" to quit
                 break

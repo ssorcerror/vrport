@@ -1,0 +1,4 @@
+cvzone==1.6.1
+opencv-contrib-python==4.7.0.72
+Pillow==9.4.0
+torch==2.0.1+cu117
