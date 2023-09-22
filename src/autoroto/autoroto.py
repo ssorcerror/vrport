@@ -9,6 +9,7 @@ from torchvision import models
 from config import AUTOROTO_PATH
 from pathlib import Path
 from src.constants.main_constants import SCREEN_RATIO
+from src.jobs.vrport_job import VRPortJob
 
 import logging
 logger = logging.getLogger(__name__)
@@ -28,23 +29,15 @@ class AutoRoto:
     gpu_ind = torch.cuda.current_device()
     gpu_name = torch.cuda.get_device_name()
 
-    def __init__(self, video_path, save_path=None, display_img=False):
-        self.cv2cap = cv2.VideoCapture(video_path)
-        self.video_path_object = Path(video_path)
-        self.video_filename = self.video_path_object.name
-        self.video_name = self.video_filename.split('.')[0]
-        if save_path == None:
-            self.save_path = Path(self.video_path_object.parent, self.video_name, self.video_name  + '.png')
-        else:
-            self.save_path = save_path
-        self.display_img = display_img
+    def __init__(self, job:VRPortJob):
+        self.job = job
 
     def rem_bg(self):
         while (1):
-            ret, frame = self.cv2cap.read()
+            ret, frame = self.job.cv2cap.read()
             if frame is None:
                 break
-            num_frame = self.cv2cap.get(cv2.CAP_PROP_POS_FRAMES)
+            num_frame = self.job.cv2cap.get(cv2.CAP_PROP_POS_FRAMES)
             pil_matte = self.createMatte(frame, Path(AUTOROTO_PATH,f'matte_{num_frame}.jpg'), self.roto_vert_res)
             if pil_matte != None:
                 cv2_matte = np.array(pil_matte.convert('RGB'))
@@ -61,9 +54,9 @@ class AutoRoto:
                 b, g, r = cv2.split(frame)
                 rgba = [b, g, r, alpha]
                 dst = cv2.merge(rgba, 4)
-                cv2.imwrite(str(self.save_path.split('.')[0]) + '_' + str(int(num_frame)) + '.' + str(self.save_path.split('.')[1]), dst)
+                cv2.imwrite(str(self.job.save_path.split('.')[0]) + '_' + str(int(num_frame)) + '.' + str(self.job.save_path.split('.')[1]), dst)
                 disp = cv2.resize(dst, (self.roto_hor_res, self.roto_vert_res))
-                if self.display_img:
+                if self.job.display_img:
                     cv2.imshow('frame',disp)
 
             if cv2.waitKey(1) == ord('q'): # press "q" to quit
